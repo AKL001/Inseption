@@ -136,6 +136,43 @@ ExecStart=
 ExecStart=/usr/bin/dockerd -H tcp://node3:2376
 
 
+2) Now for the security part:
+    Use TLS, to secure both  the client and the daemon. 
 
+    there is 2 modes:
+        -client mode 
+        -daemon mode
+
+e high-level process will be as follows:
+1. Conﬁgure a CA and certiﬁcates
+2. Create a CA
+3. Create and sign keys for the Daemon
+4. Create and sign keys for the Client
+5. Distribute keys
+6. Conﬁgure Doer to use TLS
+7. Conﬁgure daemon mode
+8. Conﬁgure client mode
+
+
+
+<h1>Chapter 3</h1>
+
+**images**
+you can think of images as class 
+meaning a blue print how to make the container , or we could say that a image is read only container .
+
+you can pull images from the registry most common registry `Docker Hub` . you pull the image to ur docker host .where docker can use it to start one or more containers.
+
+Images are mad up of multiple layers that are stacked on top of each others.
+
+**Docker images - Deep dive**
+
+the two constructs become dependent or each other , you cannot delete the image untile the last container using it has been stopped and destroyed. 
+
+
+images get stored in centralised place called iamge registries.
+
+
+for alpine:edge to pull the latest version 
 
 
