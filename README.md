@@ -1,5 +1,30 @@
 # Docker Learning Notes
 
+## Table of Contents
+
+- [Chapter 1: Docker Fundamentals](#chapter-1-docker-fundamentals)
+  - [Benefits of Using Docker](#benefits-of-using-docker-or-containers-in-general)
+  - [Windows vs Linux Containers](#windows-containers-vs-linux-containers)
+  - [Kubernetes](#what-about-kubernetes)
+  - [Docker Technology](#docker-technology)
+  - [Common Commands](#common-commands)
+- [Chapter 2: Docker Engine Architecture](#chapter-2-docker-engine-architecture)
+  - [Components of Docker Engine](#components-of-docker-engine)
+  - [runc](#runc)
+  - [containerd](#containerd)
+  - [Docker Socket File](#docker-socket-file)   
+  - [Container Creation Process](#container-creation-process)
+  - [The Shim](#the-shim)
+  - [Secure Connection](#secure-connection)
+- [Chapter 3: Images and Containers](#chapter-3-images-and-containers)
+  - [Images](#images)
+  - [Containers](#containers)
+  - [Container Lifecycle](#container-lifecycle)
+  - [Port Mappings](#port-mappings)
+  - [Container Commands Reference](#container-commands-reference)
+
+---
+
 ## Chapter 1: Docker Fundamentals
 
 ### Benefits of Using Docker or Containers in General
