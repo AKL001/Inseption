@@ -176,3 +176,45 @@ images get stored in centralised place called image registries.
 for alpine:edge to pull the latest version 
 
 #The relationship between images and cotnainer. 
+
+
+**CONTAINERS**
+
+-docker version (to check the if docker is runing)
+
+-service docker status
+
+-systemctl is-active docker
+
+(what happens when we run mutliple container from a single image)
+what happens when you `docker run`
+    docker 
+. pull / uses an image
+. create a new container ID
+. create a new wirtable layer
+. stores metadata like
+
+```bash
+    container_id → {
+  image_id,
+  graphdriver: overlay2,
+  upperdir: /var/lib/docker/overlay2/XYZ/diff,
+  lowerdir: image layers,
+  mergeddir: /var/lib/docker/overlay2/XYZ/merged
+}
+``` 
+this write to disk immediately 
+
+when u run `docker start`
+
+. look up the container ID
+. loads its save metadata
+. remounts :
+    - same UpperDir (wirtable layer)
+    - same LowerDir (image layers)
+. recreate the merge filesystem view
+. start the process 
+
+how to see this run : `docker inspect <container>`
+
+
