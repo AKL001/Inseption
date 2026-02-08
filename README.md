@@ -525,8 +525,8 @@ to brind the application down or stop it
 - docker volume inspect counter-app_counter-vol | grep Mount
 
 ```bash
-docker-compose up is the command to deploy a Compose app. It expects the Compose ﬁle to be called
-docker-compose.yml or docker-compose.yaml, but you can specify a custom ﬁlename with the -f ﬂag.
+•docker-compose up is the command to deploy a Compose app. It expects the Compose ﬁle to be called
+•docker-compose.yml or docker-compose.yaml, but you can specify a custom ﬁlename with the -f ﬂag.
 It’s common to start the app in the baground with the -d ﬂag.
 • docker-compose stop will stop all of the containers in a Compose app without deleting them from the
 system. e app can be easily restarted with docker-compose restart.
@@ -541,4 +541,41 @@ each one is running, and network ports.
 but not volumes and images.
 ``` 
 
+
+## Chapter 5: Docker Networking
+
+Docker networking is based on an open-source pluggable architecture called Container Network Model (CNM)
+- The Container Network model (CNM)
+- `libnetwork` is Docker's real-world  implementation of the CNM .
+- Drivers extend the model by implementing specific network topologies
+
+The build defines 3 major building blocks:
+
+• Sandboxes: is a isolated network stack . it includes Ethernet iterfaces ports routing ...
+• Endpoints: are virtual network iterfaces. they responsible for making connections . it's job to connect a sandbox to a network
+• Networks: are software implemtation of a switch. they group together and isolate a colleciton of enndpoints that need to communicate. 
+
+# Single-host Bridge networks
+
+imaging we have 2 diffrent hosts , Host a , and host b, same in the same network . and we have for each of them a container runing. u may think that the container can talk to each other, cuz the host are in the same network , not realy . docker creat a bridge by default if you dont specify it. with that the container inside the docker can communicate with each others . but to other host no even if they are at the same network. 
+
+- u can override in the command using the `--network` flag to specify the type of the network and name of it. 
+- use the `docker network inspect bridge` to inspect the IPs Driver, 
+
+- docker network inspect localnet --format '{{json .Containers}}' 
+
+- `brctl show` a command that shows the bridges 
+
+- 
+
+
+
+NOTES: 
+  **Docker bridge network** (single host Bridge networks):
+- creating a custom brigde let u use DNS.
+- 
+  **Docker host network**  ():
+- this can be used for production 
+- the container uses the same ip as the host network. 
+  **IPvlan** 
 
