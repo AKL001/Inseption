@@ -579,3 +579,86 @@ NOTES:
 - the container uses the same ip as the host network. 
   **IPvlan** 
 
+## Chapter 6: Docker volumes and presistent data
+
+# data type:
+  persistent data and non-persistent 
+
+  Persistent is the data you need to keep. Things like; customer records, ﬁnancial data, research results, audit logs,
+and even some types of application log data. Non-persistent is the data you don’t need to keep.
+
+  To deal with non-presistent data, Docker container  handle that automatically, its tightly coupled to the lifecycle of the container. 
+
+  To deal with persistent data, the container needs to store it in a `volume` are separate objects that have their lifecycles decoupled from container. 
+
+
+The Wirable container layer exist in the filesystem of the Docker host called (local storage, ephemeral storage, graphdriver storage)
+
+# Linux path
+Linux Docker hosts: /var/lib/docker/<storage-driver>/...
+
+# Persistent data volums  
+
+- when u have a persistent data or data that u want to save even if u stop the container or delete it , you should use volumes 
+. Volumes are independent objects that are not tied to the lifecycle of a container 
+. Volumes enable multiple containers on diffrent Docker hosts to access and share the same data
+
+1) we could create a volume using `docker volume create <volume name>` 
+2) then we mount taht volume to the container. 
+Note: if u did not specify the path for the host, we could find that volume, by using `docker volume inspect <name>`, and look for `Mountpoint` 
+
+# how to delete a docker volume :
+
+- **`docker volume rm <volume name>`** - use this to delete a sepecific volume 
+- **`docker volume prune`** - delets all the unused volumes
+
+# Lets try to mount a volume to a container or multiple containers 
+
+we need to run a container with some specific flags 
+
+- **`docker container run -dit --name <container_name> --mount source=<volume_name>,target=<path_in_container> <image_name>`** - this would run the container and mount it with the source and target .`-d` for detatch from the terminal and run the container in the background. `-i` this keeps STDIN (Standard Input) open even if not attached. `-t` It makes the container think it's connected to a real terminal screen.
+
+- **`docker volume ls`** - to see if the volume is created. 
+
+
+# Sharing storage across hosts or cluster nodes
+
+these external systems can be cloud storage services or enterprise storage systems in your on-premises data centers.
+
+Building a setup like this requires a lot of things. You need access to a specialised storage systems and knowledge
+of how it works and presents storage. You also need to know how your applications read and write data to the
+shared storage. Finally, you need a volumes driver plugin that works with the external storage system.
+
+Doer Hub is the best place to ﬁnd volume plugins. Login to Doer Hub, select the view to show plugins instead
+of containers, and ﬁlter results to only show Volume plugins. Once you’ve located the appropriate plugin for
+your storage system, you create any conﬁguration ﬁles it might need, and install it with docker plugin install.
+
+- **`docker plugin ls`** - 
+
+## Chapter 7: Docker Security 
+
+# Linux security technology
+
+  - NameSpaces
+  - Control Groups
+  - Capabilities
+  - Mandatory Access Control
+  - seccomp 
+
+# namespaces
+
+- **`pstree -p`** - to see the process tree.
+namespaces uses this system call `unshare` 
+namespaces are the reason why processes and container think they are isolated. 
+
+docker uses this namespaces for isolation : 
+
+- PID : The container thinks its main app is PID 1, but on the host, it might actually be PID 4502.
+
+- NET : The container has its own IP (172.17.0.2) and doesn't see the host's Wi-Fi or Ethernet.
+
+- MOUNT: The container sees / as its own image, not the host's /home or /etc folders.
+
+# Summary 
+  . Namespaces 
+
