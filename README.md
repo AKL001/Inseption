@@ -660,5 +660,20 @@ docker uses this namespaces for isolation :
 - MOUNT: The container sees / as its own image, not the host's /home or /etc folders.
 
 # Summary 
-  . Namespaces 
+  . Namespaces isolate processes on a single OS.
+  Docker on Linux currently utilizes the following kernel namespaces:
+    • Process ID (pid)
+    • Network (net)
+    • Filesystem/mount (mnt)
+    • Inter-process Communication (ipc)
+    • User (user)
+    • UTS (uts)
+
+  Remember… a container is a collection of namespaces paaged and ready to use
+
+# Control Groups (cgroups)
+
+If namespaces are about isolation, control groups (cgroups) are about setting limits.
+
+
 
