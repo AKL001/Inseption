@@ -12,7 +12,7 @@
   - [Components of Docker Engine](#components-of-docker-engine)
   - [runc](#runc)
   - [containerd](#containerd)
-  - [Docker Socket File](#docker-socket-file)   
+  - [Docker Socket File](#docker-socket-file)
   - [Container Creation Process](#container-creation-process)
   - [The Shim](#the-shim)
   - [Secure Connection](#secure-connection)
@@ -34,6 +34,21 @@
   - [Example docker-compose.yml](#example-docker-composeyml)
   - [Docker Compose Commands](#docker-compose-commands)
   - [Docker Compose Commands Summary](#docker-compose-commands-summary)
+- [Chapter 6: Docker Networking](#chapter-6-docker-networking)
+  - [CNM Components](#cnm-components)
+  - [The CNM Building Blocks](#the-cnm-building-blocks)
+  - [Single-host Bridge Networks](#single-host-bridge-networks)
+  - [Network Types](#network-types)
+- [Chapter 7: Docker Volumes and Persistent Data](#chapter-7-docker-volumes-and-persistent-data)
+  - [Data Types](#data-types)
+  - [Container Storage](#container-storage)
+  - [Persistent Data Volumes](#persistent-data-volumes)
+  - [Sharing Storage Across Hosts](#sharing-storage-across-hosts-or-cluster-nodes)
+- [Chapter 8: Docker Security](#chapter-8-docker-security)
+  - [Linux Security Technologies](#linux-security-technologies)
+  - [Namespaces](#namespaces)
+  - [Control Groups (cgroups)](#control-groups-cgroups)
+
 ---
 
 ## Chapter 1: Docker Fundamentals
@@ -319,6 +334,7 @@ Format: `(0.0.0.0:80->8080/tcp)`
 
 - **`docker container inspect`** - Will show you detailed configuration and runtime information about a container. It accepts container names and container IDs as its main argument
 
+---
 
 ## Chapter 4: Containerizing an Application
 
@@ -471,209 +487,154 @@ By default, `docker-compose up` expects the name of the Compose file to be `dock
 
 - **`docker-compose down`** - Will stop and delete a running Compose app. It deletes containers and networks, but not volumes and images.
 
+---
 
+## Chapter 6: Docker Networking
 
-EXAMPLE of Docker-compose.yml
-```bash 
-version: "3.8"
-services:
-  web-fe:
-    build: .
-    command: python app.py
-    ports:
-      - target: 5000
-      published: 5000
-    networks:
-      - counter-net
-    volumes:
-      - type: volume
-      source: counter-vol
-      target: /code
-  redis:
-    image: "redis:alpine"
-    networks:
-      counter-net:
-networks:
-  over-net:
-    driver: overlay
-    attachable: true
-volumes:
-  counter-vol:
+Docker networking is based on an open-source pluggable architecture called **Container Network Model (CNM)**.
 
-```
+### CNM Components
 
-# Docker-compose Commands
+- **The Container Network Model (CNM)** - The design specification
+- **`libnetwork`** - Docker's real-world implementation of the CNM
+- **Drivers** - Extend the model by implementing specific network topologies
 
-- **`docker-compose up`** - to lunch docker compose.
+### The CNM Building Blocks
 
-By default, docker-compose up expects the name of the Compose ﬁle to docker-compose.yml. If your Compose
-ﬁle has a diﬀerent name, you need to specify it with the -f ﬂag.
-- **`docker-compose -f <docker-composer name> up`**
+The CNM defines 3 major building blocks:
 
-- **`docker-compose -f prod-equus-bass.yml up -d`** - to run it in the background deamon.
+- **Sandboxes** - An isolated network stack. It includes Ethernet interfaces, ports, routing tables, etc.
+- **Endpoints** - Virtual network interfaces. They are responsible for making connections. Their job is to connect a sandbox to a network.
+- **Networks** - Software implementation of a switch. They group together and isolate a collection of endpoints that need to communicate.
 
-to brind the application down or stop it
+### Single-host Bridge Networks
 
-- **`docker-compose down`** 
+Imagine we have 2 different hosts, Host A and Host B, both on the same network, and we have a container running on each of them. You may think that the containers can talk to each other because the hosts are on the same network - not really. Docker creates a bridge by default if you don't specify it. With that, the containers inside the Docker host can communicate with each other, but not with other hosts even if they are on the same network.
 
-- docker-compose ps
+- You can override this in the command using the `--network` flag to specify the type of network and name of it.
+- Use `docker network inspect bridge` to inspect the IPs, Driver, etc.
+- `docker network inspect localnet --format '{{json .Containers}}'` - Format output as JSON
+- `brctl show` - A command that shows the bridges
 
-- docker-compose top
-- docker-compose stop
-- docker-compose restart
+### Network Types
 
-- docker volume inspect counter-app_counter-vol | grep Mount
+**Docker bridge network** (single-host bridge networks):
+- Creating a custom bridge lets you use DNS
 
-```bash
-•docker-compose up is the command to deploy a Compose app. It expects the Compose ﬁle to be called
-•docker-compose.yml or docker-compose.yaml, but you can specify a custom ﬁlename with the -f ﬂag.
-It’s common to start the app in the baground with the -d ﬂag.
-• docker-compose stop will stop all of the containers in a Compose app without deleting them from the
-system. e app can be easily restarted with docker-compose restart.
-• docker-compose rm will delete a stopped Compose app. It will delete containers and networks, but it will
-not delete volumes and images.
-• docker-compose restart will restart a Compose app that has been stopped with docker-compose stop.
-If you have made changes to your Compose app since stopping it, these anges will not appear in the
-restarted app. You will need to re-deploy the app to get the changes.
-• docker-compose ps will list each container in the Compose app. It shows current state, the command
-each one is running, and network ports.
-• docker-compose down will stop and delete a running Compose app. It deletes containers and networks,
-but not volumes and images.
-``` 
+**Docker host network**:
+- This can be used for production
+- The container uses the same IP as the host network
 
+**IPvlan**:
+- Advanced networking option for more complex setups
 
-## Chapter 5: Docker Networking
+---
 
-Docker networking is based on an open-source pluggable architecture called Container Network Model (CNM)
-- The Container Network model (CNM)
-- `libnetwork` is Docker's real-world  implementation of the CNM .
-- Drivers extend the model by implementing specific network topologies
+## Chapter 7: Docker Volumes and Persistent Data
 
-The build defines 3 major building blocks:
+### Data Types
 
-• Sandboxes: is a isolated network stack . it includes Ethernet iterfaces ports routing ...
-• Endpoints: are virtual network iterfaces. they responsible for making connections . it's job to connect a sandbox to a network
-• Networks: are software implemtation of a switch. they group together and isolate a colleciton of enndpoints that need to communicate. 
+There are two types of data:
+- **Persistent data** - Data you need to keep (customer records, financial data, research results, audit logs, application log data)
+- **Non-persistent data** - Data you don't need to keep
 
-# Single-host Bridge networks
+To deal with **non-persistent data**, Docker containers handle that automatically. It's tightly coupled to the lifecycle of the container.
 
-imaging we have 2 diffrent hosts , Host a , and host b, same in the same network . and we have for each of them a container runing. u may think that the container can talk to each other, cuz the host are in the same network , not realy . docker creat a bridge by default if you dont specify it. with that the container inside the docker can communicate with each others . but to other host no even if they are at the same network. 
+To deal with **persistent data**, the container needs to store it in a **volume**. Volumes are separate objects that have their lifecycles decoupled from containers.
 
-- u can override in the command using the `--network` flag to specify the type of the network and name of it. 
-- use the `docker network inspect bridge` to inspect the IPs Driver, 
+### Container Storage
 
-- docker network inspect localnet --format '{{json .Containers}}' 
+The writable container layer exists in the filesystem of the Docker host, called (local storage, ephemeral storage, or graphdriver storage).
 
-- `brctl show` a command that shows the bridges 
+**Linux path:** `/var/lib/docker/<storage-driver>/...`
 
-- 
+### Persistent Data Volumes
 
+When you have persistent data or data that you want to save even if you stop the container or delete it, you should use volumes:
 
+- Volumes are independent objects that are not tied to the lifecycle of a container
+- Volumes enable multiple containers on different Docker hosts to access and share the same data
 
-NOTES: 
-  **Docker bridge network** (single host Bridge networks):
-- creating a custom brigde let u use DNS.
-- 
-  **Docker host network**  ():
-- this can be used for production 
-- the container uses the same ip as the host network. 
-  **IPvlan** 
+#### Creating and Using Volumes
 
-## Chapter 6: Docker volumes and presistent data
+1. **`docker volume create <volume_name>`** - Create a volume
 
-# data type:
-  persistent data and non-persistent 
+2. Then mount that volume to the container
 
-  Persistent is the data you need to keep. Things like; customer records, ﬁnancial data, research results, audit logs,
-and even some types of application log data. Non-persistent is the data you don’t need to keep.
+**Note:** If you did not specify the path for the host, you can find that volume by using `docker volume inspect <name>` and look for `Mountpoint`.
 
-  To deal with non-presistent data, Docker container  handle that automatically, its tightly coupled to the lifecycle of the container. 
+#### How to Delete a Docker Volume
 
-  To deal with persistent data, the container needs to store it in a `volume` are separate objects that have their lifecycles decoupled from container. 
+- **`docker volume rm <volume_name>`** - Use this to delete a specific volume
+- **`docker volume prune`** - Deletes all the unused volumes
 
+#### Mounting a Volume to a Container
 
-The Wirable container layer exist in the filesystem of the Docker host called (local storage, ephemeral storage, graphdriver storage)
+We need to run a container with some specific flags:
 
-# Linux path
-Linux Docker hosts: /var/lib/docker/<storage-driver>/...
+- **`docker container run -dit --name <container_name> --mount source=<volume_name>,target=<path_in_container> <image_name>`** - This would run the container and mount it with the source and target.
+  - `-d` for detach from the terminal and run the container in the background
+  - `-i` keeps STDIN (Standard Input) open even if not attached
+  - `-t` makes the container think it's connected to a real terminal screen
 
-# Persistent data volums  
+- **`docker volume ls`** - To see if the volume is created
 
-- when u have a persistent data or data that u want to save even if u stop the container or delete it , you should use volumes 
-. Volumes are independent objects that are not tied to the lifecycle of a container 
-. Volumes enable multiple containers on diffrent Docker hosts to access and share the same data
+### Sharing Storage Across Hosts or Cluster Nodes
 
-1) we could create a volume using `docker volume create <volume name>` 
-2) then we mount taht volume to the container. 
-Note: if u did not specify the path for the host, we could find that volume, by using `docker volume inspect <name>`, and look for `Mountpoint` 
+These external systems can be cloud storage services or enterprise storage systems in your on-premises data centers.
 
-# how to delete a docker volume :
+Building a setup like this requires a lot of things. You need access to a specialized storage system and knowledge of how it works and presents storage. You also need to know how your applications read and write data to the shared storage. Finally, you need a volume driver plugin that works with the external storage system.
 
-- **`docker volume rm <volume name>`** - use this to delete a sepecific volume 
-- **`docker volume prune`** - delets all the unused volumes
+Docker Hub is the best place to find volume plugins. Login to Docker Hub, select the view to show plugins instead of containers, and filter results to only show Volume plugins. Once you've located the appropriate plugin for your storage system, you create any configuration files it might need, and install it with `docker plugin install`.
 
-# Lets try to mount a volume to a container or multiple containers 
+- **`docker plugin ls`** - List installed plugins
 
-we need to run a container with some specific flags 
+---
 
-- **`docker container run -dit --name <container_name> --mount source=<volume_name>,target=<path_in_container> <image_name>`** - this would run the container and mount it with the source and target .`-d` for detatch from the terminal and run the container in the background. `-i` this keeps STDIN (Standard Input) open even if not attached. `-t` It makes the container think it's connected to a real terminal screen.
+## Chapter 8: Docker Security
 
-- **`docker volume ls`** - to see if the volume is created. 
+### Linux Security Technologies
 
+Docker leverages several Linux security technologies:
 
-# Sharing storage across hosts or cluster nodes
+- Namespaces
+- Control Groups (cgroups)
+- Capabilities
+- Mandatory Access Control (MAC)
+- seccomp
 
-these external systems can be cloud storage services or enterprise storage systems in your on-premises data centers.
+### Namespaces
 
-Building a setup like this requires a lot of things. You need access to a specialised storage systems and knowledge
-of how it works and presents storage. You also need to know how your applications read and write data to the
-shared storage. Finally, you need a volumes driver plugin that works with the external storage system.
+- **`pstree -p`** - To see the process tree
 
-Doer Hub is the best place to ﬁnd volume plugins. Login to Doer Hub, select the view to show plugins instead
-of containers, and ﬁlter results to only show Volume plugins. Once you’ve located the appropriate plugin for
-your storage system, you create any conﬁguration ﬁles it might need, and install it with docker plugin install.
+Namespaces use the system call `unshare`. Namespaces are the reason why processes in containers think they are isolated.
 
-- **`docker plugin ls`** - 
+Docker uses these namespaces for isolation:
 
-## Chapter 7: Docker Security 
+- **PID** - The container thinks its main app is PID 1, but on the host, it might actually be PID 4502.
 
-# Linux security technology
+- **NET** - The container has its own IP (172.17.0.2) and doesn't see the host's Wi-Fi or Ethernet.
 
-  - NameSpaces
-  - Control Groups
-  - Capabilities
-  - Mandatory Access Control
-  - seccomp 
+- **MOUNT** - The container sees `/` as its own image, not the host's `/home` or `/etc` folders.
 
-# namespaces
+#### Namespaces Summary
 
-- **`pstree -p`** - to see the process tree.
-namespaces uses this system call `unshare` 
-namespaces are the reason why processes and container think they are isolated. 
+- Namespaces isolate processes on a single OS
 
-docker uses this namespaces for isolation : 
+Docker on Linux currently utilizes the following kernel namespaces:
+- Process ID (pid)
+- Network (net)
+- Filesystem/mount (mnt)
+- Inter-process Communication (ipc)
+- User (user)
+- UTS (uts)
 
-- PID : The container thinks its main app is PID 1, but on the host, it might actually be PID 4502.
+**Remember:** A container is a collection of namespaces packaged and ready to use.
 
-- NET : The container has its own IP (172.17.0.2) and doesn't see the host's Wi-Fi or Ethernet.
+### Control Groups (cgroups)
 
-- MOUNT: The container sees / as its own image, not the host's /home or /etc folders.
+If namespaces are about **isolation**, control groups (cgroups) are about **setting limits**.
 
-# Summary 
-  . Namespaces isolate processes on a single OS.
-  Docker on Linux currently utilizes the following kernel namespaces:
-    • Process ID (pid)
-    • Network (net)
-    • Filesystem/mount (mnt)
-    • Inter-process Communication (ipc)
-    • User (user)
-    • UTS (uts)
+Containers are isolated from each other but all share a common set of OS resources - things like CPU, RAM, and network bandwidth.
 
-  Remember… a container is a collection of namespaces paaged and ready to use
-
-# Control Groups (cgroups)
-
-If namespaces are about isolation, control groups (cgroups) are about setting limits.
-
-
-
+Cgroups let us set limits on each of these so a single container cannot consume everything and cause a denial of service (DoS) attack.
