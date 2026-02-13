@@ -2,3 +2,6 @@ book
 ./book
 book.pdf
 ./book.pdf
+secrets/
+/secrets
+srcs/.env
